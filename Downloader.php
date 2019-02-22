@@ -13,18 +13,18 @@ foreach ($urls as $url){
               $pageiscomplete = true;
               //continue;
               foreach (page2jpglink($chapterurl) as $jpglink => $totalpage){
+                     $CBZpath = __DIR__.'/CBZ/'.$comic.'/'.$comic.' - '.$chaptername.'.cbz';
                      if (!isset($jpglink)){
                             echo 'This has no jpglink!!! STOP Execution!!!';
                             continue;
                             }
 					
-                     if(file_exists($CBZpath)){
+                     else if(file_exists($CBZpath)){
                             echo '   '.end(explode('/',$CBZpath)).' is exist, skip;
 ';
                             continue;
                             }
                      else {
-                            $CBZpath = __DIR__.'/CBZ/'.$comic.'/'.$comic.' - '.$chaptername.'.cbz';
                             echo '   '.'Begin Download:'.$jpglink.'[1-'.$totalpage.'].jpg
 ';					
                             //echo $totalpage.'<br>';
