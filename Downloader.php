@@ -1,4 +1,7 @@
 <?
+//github address https://github.com/jas0nc/GuGuComic2
+//developed by Jas0nchan
+
 $urllist = __DIR__.'/URLs.txt';
 $urls = preg_split("/[\s,]+/", file_get_contents($urllist));
 foreach ($urls as $url){
