@@ -1,7 +1,4 @@
 <?
-//github address https://github.com/jas0nc/GuGuComic2
-//developed by Jas0nchan
-
 $urllist = __DIR__.'/URLs.txt';
 $urls = preg_split("/[\s,]+/", file_get_contents($urllist));
 foreach ($urls as $url){
@@ -16,13 +13,10 @@ foreach ($urls as $url){
               $pageiscomplete = true;
               //continue;
               foreach (page2jpglink($chapterurl) as $jpglink => $totalpage){
-                     $CBZpath = __DIR__.'/CBZ/'.$comic.'/'.$comic.' - '.$chaptername.'.cbz';
-                     echo '   '.'Begin Download:'.$jpglink.'[1-'.$totalpage.'].jpg
-';					
-    				if (!isset($jpglink)){
-    					echo 'This has no jpglink!!! STOP Execution!!!';
-    					continue;
-    					}
+                     if (!isset($jpglink)){
+                            echo 'This has no jpglink!!! STOP Execution!!!';
+                            continue;
+                            }
 					
                      if(file_exists($CBZpath)){
                             echo '   '.end(explode('/',$CBZpath)).' is exist, skip;
@@ -30,6 +24,9 @@ foreach ($urls as $url){
                             continue;
                             }
                      else {
+                            $CBZpath = __DIR__.'/CBZ/'.$comic.'/'.$comic.' - '.$chaptername.'.cbz';
+                            echo '   '.'Begin Download:'.$jpglink.'[1-'.$totalpage.'].jpg
+';					
                             //echo $totalpage.'<br>';
                             //create CBZ
                             if(!downloadimg($comic,$chaptername,$jpglink,$totalpage)) {
