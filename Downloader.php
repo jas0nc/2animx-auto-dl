@@ -24,6 +24,8 @@ foreach ($urls as $url){
                             continue;
                             }	
                      else {
+                            echo '   '.$chaptername.'
+';
                             echo '   '.'   '.'Begin Download:'.$jpglink.'[1-'.$totalpage.'].jpg
 ';					
                             //echo $totalpage.'<br>';
@@ -74,7 +76,7 @@ function comic2chapterlist($url){
               $chaptername = str_replace ('章', ' 章',$chaptername);
               $chaptername = array_values(explode(' ',$chaptername))[0].' '.sprintf('%03d', array_values(explode(' ',$chaptername))[1]).' '.array_values(explode(' ',$chaptername))[2];
               //$chapternamelist = array_keys($chapterlist);
-              if(strpos($chapterurl,'cid') != false && !in_array($chaptername,array_keys($chapterlist))){
+              if(strpos($chapterurl,'cid') != false && strpos($chaptername,'第') != false && !in_array($chaptername,array_keys($chapterlist))){
                    $chapterlist[$chaptername] = $chapterurl;
                    //echo $chaptername.$jpg.'<br>';
                    //echo count($chapterlist).$chaptername.$chapterurl.'<br>';
@@ -122,28 +124,25 @@ function downloadimg($comic,$chaptername,$jpglink,$totalpage){
                      echo '   '.'   '.'   '.'image exist: '.end(explode('/',$filename)).', skip;
 ';
                      }
-              else {
+              else if ($jpglink == '') {
+                     $pageiscomplete = false;    
+                     echo '   '.'   '.'   '.'jpglink not provided: '.$jpglink.', break;
+';
+                     break;
+              }
+              else{
                      //test if secretkey is usable
-                     $start_memory_img = memory_get_usage();
-                     $downloadpage_img = fopen($jpglink.$i.'.jpg', 'r'); 
-                     $downloadpagesize_img = memory_get_usage() - $start_memory_img;
+                     
+                     $downloadpage_img = fopen($jpglink.$i.'.jpg', 'r');
+                     if (!$downloadpage_img) {
+                            $downloadpage_img = fopen($jpglink.$i.'.png', 'r'); 
+                            }
                      file_put_contents($filename, $downloadpage_img);
                      if (is_file($filename) && filesize($filename) > 1000)
                      {
                             echo '   '.'   '.'   '.'downloading image: '.end(explode('/',$filename)).', next;
 ';							//echo '<img id="the_pic" class="center fit" src="/temp/'.$comic.'/'.$comic.'-'.$newcahptersname[$keys[$chap]].'-'.$i.'.jpg"><br>';
                      }
-                     /*else if (is_file($filename) && file_get_contents($filename) != file_get_contents(__DIR__.'/temp/404.jpg') && filesize($filename) > 1000){
-                            echo '   '.'   '.'downloading image: '.end(explode('/',$filename)).'(small but not 404), next;
-';							//echo '<img id="the_pic" class="center fit" src="/temp/'.$comic.'/'.$comic.'-'.$newcahptersname[$keys[$chap]].'-'.$i.'.jpg"><br>';
-                     }
-                     else if (file_get_contents($filename) == file_get_contents(__DIR__.'/temp/404.jpg')){
-                            echo '   '.'   '.'download fail: '.end(explode('/',$filename)).', (404 error), break;
-';
-                            //echo 'download failed: <a href="'.$jpglink.$i.'.jpg" target="_blank">'.$comic.'-'.$newcahptersname[$keys[$chap]].'-'.$i.'.jpg</a>. ('.round(filesize($filename)/1024,0).'KB)<br>';
-                            $pageiscomplete = false;
-                            break;
-                     }*/
                      else {
                             echo '   '.'   '.'   '.'download fail: '.end(explode('/',$filename)).', file size ('.round(filesize($filename)/1024).'KB)too small, break;
 ';
@@ -153,7 +152,7 @@ function downloadimg($comic,$chaptername,$jpglink,$totalpage){
                             $pageiscomplete = false;
                             //break;
                      }
-              }      
+              }
        }
        //rmdir($structure);
        return $pageiscomplete;
