@@ -1,11 +1,21 @@
 <?
 $urllist = __DIR__ . '/URLs.txt';
 $urls = preg_split("/[\s,]+/", file_get_contents($urllist));
+$missingchapter = '';
 foreach ($urls as $url)
 {
     $comic = getcomicname($url);
+	
+	if ($comic != '') 
+	{
     echo $comic . ' ('.$url.')
 ';
+	}
+	else {
+    echo 'no comic name returned for : '.$comic . ' ('.$url.')
+';
+		continue;
+	}
     foreach (comic2chapterlist($url) as $chaptername => $chapterurl)
     {
         $pageiscomplete = true;
@@ -36,6 +46,7 @@ foreach ($urls as $url)
                 {
                     echo '   ' . '   ' . 'some page is still not downloaded.
 ';
+                    $missingchapter += $comic." - ". $chaptername . ' ('.$chapterurl.') - ['.$totalpage.' pages] \n\r';
                     continue;
                 }
                 else	//create CBZ
@@ -47,11 +58,28 @@ foreach ($urls as $url)
                 }
             }
         }
-    } //exit; //only run for one comic
+    } 
+    cleantempfolder($comic);
+    downloadcoverpic($comic,$url);
+    //exit; //only run for one comic
 }
+file_put_contents(__DIR__.'/missing_chapters.txt',$missingchapter);
 
 //-----------------function list----------------//
-
+function cleantempfolder($comic) 
+{
+	if (file_exists(__DIR__.'/temp/'.$comic)) {rmdir(__DIR__.'/temp/'.$comic);}
+}
+function downloadcoverpic($comic,$url) 
+{	
+	$coverurl = 'https://www.2animx.com/upload/icon/H/'.end(explode('-',$url)).'/icon.jpg';
+	if(!file_exists(__DIR__.'/CBZ/'.$comic.'/cover.jpg') || filesize(__DIR__.'/CBZ/'.$comic.'/cover.jpg') < 20000){
+		$start_memory_img = memory_get_usage();
+		$downloadpage_img = fopen($coverurl, 'r');
+		$downloadpagesize_img = memory_get_usage() - $start_memory_img;
+		file_put_contents(__DIR__.'/CBZ/'.$comic.'/cover.jpg', $downloadpage_img);
+	}
+}
 function getcomicname($url)
 {
     $html = file_get_contents($url);
@@ -65,7 +93,10 @@ function getcomicname($url)
         $comicname = $tag->nodeValue;
     }
     $comicname = explode('漫畫', $comicname);
-    return $comicname[0];
+	//$comicname = end(explode('name-', $url));
+	//$comicname = explode('-id', $comicname);
+	$comicname = $comicname[0];
+    return $comicname;
 }
 
 function comic2chapterlist($url)
