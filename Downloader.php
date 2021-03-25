@@ -82,7 +82,6 @@ function getcomicname($url)
 	//$comicname = end(explode('name-', $url));
 	//$comicname = explode('-id', $comicname);
 	$comicname = $comicname[0];
-  $comicname = preg_replace("/\+/", "", $comicname);
     return $comicname;
 }
 
