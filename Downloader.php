@@ -1,12 +1,12 @@
 <?
 $urllist = __DIR__ . '/URLs.txt';
 $urls = preg_split("/[\s,]+/", file_get_contents($urllist));
-$missingchapter = '';
+$missingchapter = 'missing chapters:';
 foreach ($urls as $url)
 {
     $comic = getcomicname($url);
-	
-	if ($comic != '') 
+
+	if ($comic != '')
 	{
     echo $comic . ' ('.$url.')
 ';
@@ -26,7 +26,7 @@ foreach ($urls as $url)
 ';
             continue;
         }
-        
+
         foreach (page2jpglink($chapterurl) as $jpglink_b4handle => $totalpage)
         {
             $jpglink = array_values(explode('replacepagenum', $jpglink_b4handle)) [0];
@@ -58,7 +58,7 @@ foreach ($urls as $url)
                 }
             }
         }
-    } 
+    }
     cleantempfolder($comic);
     downloadcoverpic($comic,$url);
     //exit; //only run for one comic
@@ -66,12 +66,12 @@ foreach ($urls as $url)
 file_put_contents(__DIR__.'/missing_chapters.txt',$missingchapter);
 
 //-----------------function list----------------//
-function cleantempfolder($comic) 
+function cleantempfolder($comic)
 {
 	if (file_exists(__DIR__.'/temp/'.$comic)) {rmdir(__DIR__.'/temp/'.$comic);}
 }
-function downloadcoverpic($comic,$url) 
-{	
+function downloadcoverpic($comic,$url)
+{
 	$coverurl = 'https://www.2animx.com/upload/icon/H/'.end(explode('-',$url)).'/icon.jpg';
 	if(!file_exists(__DIR__.'/CBZ/'.$comic.'/cover.jpg') || filesize(__DIR__.'/CBZ/'.$comic.'/cover.jpg') < 20000){
 		$start_memory_img = memory_get_usage();
@@ -104,12 +104,12 @@ function comic2chapterlist($url)
     $chapterlist = array();
 
     $html = file_get_contents($url);
-	
+
     $doc = new DOMDocument();
     @$doc->loadHTML($html);
-	
+
     $tags = $doc->getElementsByTagName('a');
-	
+
     foreach ($tags as $tag)
     {
         $chapterurl = $tag->getAttribute('href'); //echo $jpg;
@@ -137,7 +137,7 @@ function comic2chapterlist($url)
                 //     echo 'have th - ';
                 $chapterlist[$chaptername] = $chapterurl;
                 //    }
-                
+
             }
         }
     }
@@ -187,15 +187,22 @@ function page2jpglink($url)
             continue;
         }
     }
-    $totalpages = $doc->getElementsByTagName('h1');
+    /*$totalpages = $doc->getElementsByTagName('h1');
     foreach ($totalpages as $totalpage)
     {
         $totalpage = $totalpage->nodeValue;
         $totalpage = end(explode('/', $totalpage));
         $totalpage = array_values(explode(' ', $totalpage)) [1];
         //echo $totalpage;
-        
-    }
+    }*/ 
+    $totalpages = $doc->getElementsByTagName('select');
+    foreach ($totalpages as $totalpage)
+    {
+        $totalpage = $totalpage->nodeValue;
+        $totalpage = end(explode('第', $totalpage));
+        $totalpage = array_values(explode('頁', $totalpage)) [0];
+
+    }//echo $totalpage;exit;
 
     if ($isjpglink)
     {
@@ -247,7 +254,7 @@ function downloadimg($comic, $chaptername, $jpglink, $totalpage)
                 file_put_contents($filename, $str);
                 fclose($fp);
                 // send success JSON
-                
+
             }
             else if (($fp = fopen($jpglink . $i . '.jpg', "rb")) !== false)
             {
@@ -271,18 +278,18 @@ function downloadimg($comic, $chaptername, $jpglink, $totalpage)
 ';
             	//continue;
             }
-            else 
+            else
             {
                 echo '   ' . '   ' . '   ' . 'Cannot open link: ' . $jpglink . $i . '.jpg(.png)
 ';
                 //break;
                 // send error message if you can
-                
+
             }
-            
+
             //download the page
             //$downloadpage_img = fopen($downloadpage_imglink, 'r');
-            //if(file_put_contents($filename, $downloadpage_img)) 
+            //if(file_put_contents($filename, $downloadpage_img))
             //{
 	            //check downloaded file
             if (is_file($filename) && filesize($filename) > 1000)
