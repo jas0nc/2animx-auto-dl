@@ -66,20 +66,6 @@ foreach ($urls as $url)
 file_put_contents(__DIR__.'/missing_chapters.txt',$missingchapter);
 
 //-----------------function list----------------//
-function cleantempfolder($comic)
-{
-	if (file_exists(__DIR__.'/temp/'.$comic)) {rmdir(__DIR__.'/temp/'.$comic);}
-}
-function downloadcoverpic($comic,$url)
-{
-	$coverurl = 'https://www.2animx.com/upload/icon/H/'.end(explode('-',$url)).'/icon.jpg';
-	if(!file_exists(__DIR__.'/CBZ/'.$comic.'/cover.jpg') || filesize(__DIR__.'/CBZ/'.$comic.'/cover.jpg') < 20000){
-		$start_memory_img = memory_get_usage();
-		$downloadpage_img = fopen($coverurl, 'r');
-		$downloadpagesize_img = memory_get_usage() - $start_memory_img;
-		file_put_contents(__DIR__.'/CBZ/'.$comic.'/cover.jpg', $downloadpage_img);
-	}
-}
 function getcomicname($url)
 {
     $html = file_get_contents($url);
@@ -96,6 +82,7 @@ function getcomicname($url)
 	//$comicname = end(explode('name-', $url));
 	//$comicname = explode('-id', $comicname);
 	$comicname = $comicname[0];
+  $comicname = preg_replace("/\+/", "", $comicname);
     return $comicname;
 }
 
@@ -194,7 +181,7 @@ function page2jpglink($url)
         $totalpage = end(explode('/', $totalpage));
         $totalpage = array_values(explode(' ', $totalpage)) [1];
         //echo $totalpage;
-    }*/ 
+    }*/
     $totalpages = $doc->getElementsByTagName('select');
     foreach ($totalpages as $totalpage)
     {
@@ -384,6 +371,20 @@ function generateComicInfo($comic, $chaptername, $summary, $totalpage)
     {
         return false;
     }
+}
+function cleantempfolder($comic)
+{
+	if (file_exists(__DIR__.'/temp/'.$comic)) {rmdir(__DIR__.'/temp/'.$comic);}
+}
+function downloadcoverpic($comic,$url)
+{
+	$coverurl = 'https://www.2animx.com/upload/icon/H/'.end(explode('-',$url)).'/icon.jpg';
+	if(!file_exists(__DIR__.'/CBZ/'.$comic.'/cover.jpg') || filesize(__DIR__.'/CBZ/'.$comic.'/cover.jpg') < 20000){
+		$start_memory_img = memory_get_usage();
+		$downloadpage_img = fopen($coverurl, 'r');
+		$downloadpagesize_img = memory_get_usage() - $start_memory_img;
+		file_put_contents(__DIR__.'/CBZ/'.$comic.'/cover.jpg', $downloadpage_img);
+	}
 }
 
 ?>
