@@ -1,7 +1,6 @@
 <?
 $urllist = __DIR__ . '/URLs.txt';
 $urls = preg_split("/[\s,]+/", file_get_contents($urllist));
-$missingchapter = 'missing chapters:';
 foreach ($urls as $url)
 {
     $comic = getcomicname($url);
@@ -26,7 +25,9 @@ foreach ($urls as $url)
 ';
             continue;
         }
-
+		else {
+			generateemptyCBZ($comic, $chaptername);
+		}
         foreach (page2jpglink($chapterurl) as $jpglink_b4handle => $totalpage)
         {
             $jpglink = array_values(explode('replacepagenum', $jpglink_b4handle)) [0];
@@ -46,7 +47,6 @@ foreach ($urls as $url)
                 {
                     echo '   ' . '   ' . 'some page is still not downloaded.
 ';
-                    $missingchapter += $comic." - ". $chaptername . ' ('.$chapterurl.') - ['.$totalpage.' pages] \n\r';
                     continue;
                 }
                 else	//create CBZ
@@ -63,7 +63,6 @@ foreach ($urls as $url)
     downloadcoverpic($comic,$url);
     //exit; //only run for one comic
 }
-file_put_contents(__DIR__.'/missing_chapters.txt',$missingchapter);
 
 //-----------------function list----------------//
 function getcomicname($url)
@@ -79,8 +78,6 @@ function getcomicname($url)
         $comicname = $tag->nodeValue;
     }
     $comicname = explode('漫畫', $comicname);
-	//$comicname = end(explode('name-', $url));
-	//$comicname = explode('-id', $comicname);
 	$comicname = $comicname[0];
     return $comicname;
 }
@@ -101,29 +98,12 @@ function comic2chapterlist($url)
         $chapterurl = $tag->getAttribute('href'); //echo $jpg;
         $chaptername = $tag->nodeValue;
         $chaptername = array_values(explode(' ', $chaptername)) [0];
-        $chaptername = str_replace('第', '第 ', $chaptername);
-        $chaptername = str_replace('回', ' 回', $chaptername);
-        $chaptername = str_replace('卷', ' 卷', $chaptername);
-        $chaptername = str_replace('話', ' 話', $chaptername);
-        $chaptername = str_replace('章', ' 章', $chaptername);
-        if (strpos($chaptername, ' ') != false)
-        {
-        	$chaptername = array_values(explode(' ', $chaptername)) [0] . ' ' . sprintf('%03d', array_values(explode(' ', $chaptername)) [1]) . ' ' . array_values(explode(' ', $chaptername)) [2];
-        }
-        else {
-        	//not common chaptper name
-        }
+        $chaptername = padzero($chaptername);
         if (!in_array($chaptername, array_keys($chapterlist)))
         {
             if (strpos($chapterurl, 'cid') != false)
             {
-
-                // echo '     have cid - ';
-                //if(strpos($chaptername,'第') != false){
-                //     echo 'have th - ';
                 $chapterlist[$chaptername] = $chapterurl;
-                //    }
-
             }
         }
     }
@@ -134,9 +114,17 @@ function comic2chapterlist($url)
    ' . 'Could be due to expicit (18+) content. Skip' . '
 ';
     }
-
     return $chapterlist;
 }
+
+function padzero($string)
+{
+  $string = preg_replace_callback('/第?(\d+)/', function($matches) {
+  return '第 '.sprintf('%03d', $matches[1]).' ';
+}, $string);
+  return $string;
+}
+
 function page2jpglink($url)
 {
     $html = file_get_contents($url);
@@ -173,6 +161,7 @@ function page2jpglink($url)
             continue;
         }
     }
+    //removed since too many typo on 2animax
     /*$totalpages = $doc->getElementsByTagName('h1');
     foreach ($totalpages as $totalpage)
     {
@@ -301,6 +290,27 @@ function downloadimg($comic, $chaptername, $jpglink, $totalpage)
     return $pageiscomplete;
 }
 
+function generateemptyCBZ($comic, $chaptername)
+{
+    $structure = __DIR__ . '/temp/' . $comic . '/';
+    $CBZpath = __DIR__ . '/CBZ/' . $comic . '/' . $comic . ' - ' . $chaptername . ' (fail).cbz';
+    //echo "This chapter is complete, generating a CBZ file for backup.<br>";
+    if (!file_exists(__DIR__ . '/CBZ/' . $comic))
+    {
+        mkdir(__DIR__ . '/CBZ/' . $comic, 0777, true);
+    }
+    if (!file_exists($CBZpath))
+    {
+        $zip = new ZipArchive;
+        $zip->open($CBZpath, ZipArchive::CREATE);
+         $zip->addFromString($comic . '-' . $chaptername . '.txt', $comic . '-' . $chaptername);
+        $zip->close();
+        echo '   ' . 'Created a empty CBZ: ' . $comic . ' - ' . $chaptername . ' (fail).cbz' . ';
+';
+    }
+    return true;
+}
+
 function generateCBZ($comic, $chaptername, $jpglink, $totalpage)
 {
     $structure = __DIR__ . '/temp/' . $comic . '/';
@@ -330,6 +340,10 @@ function generateCBZ($comic, $chaptername, $jpglink, $totalpage)
                 unlink($filename);
             }
         }
+    }
+    if (file_exists(__DIR__ . '/CBZ/' . $comic . '/' . $comic . ' - ' . $chaptername . ' (fail).cbz'))
+    {
+    	//unlink(__DIR__ . '/CBZ/' . $comic . '/' . $comic . ' - ' . $chaptername . ' (fail).cbz');
     }
     return true;
 }
